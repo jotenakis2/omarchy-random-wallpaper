@@ -43,7 +43,7 @@ Désinstallation :
 ./install.sh --uninstall
 ```
 
-## Installation en paquet pacman (machine neuve, autre machine)
+## Installation en paquet pacman
 
 ```bash
 cd ~/Projects/omarchy-random-wallpaper

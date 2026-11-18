@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# shellcheck enable=all
+
+# Change le fond d'écran pour une image tirée au hasard dans WALLPAPER_DIR
+# (par défaut ~/Pictures/wallpapers), via l'API Omarchy.
+
+set -euo pipefail
+
+wallpaper_dir="${WALLPAPER_DIR:-${HOME}/Pictures/wallpapers}"
+background_link="${HOME}/.local/state/omarchy/current/background"
+
+if ! command -v omarchy >/dev/null 2>&1; then
+  echo "omarchy introuvable dans le PATH : ce script est prévu pour Omarchy." >&2
+  exit 1
+fi
+
+if [[ ! -d ${wallpaper_dir} ]]; then
+  echo "Dossier introuvable : ${wallpaper_dir}" >&2
+  exit 1
+fi
+
+# Extensions acceptées par le shell Omarchy.
+shopt -s nullglob nocaseglob
+wallpapers=("${wallpaper_dir}"/*.{png,jpg,jpeg,webp})
+shopt -u nullglob nocaseglob
+
+if (( ${#wallpapers[@]} == 0 )); then
+  echo "Aucune image dans ${wallpaper_dir}" >&2
+  exit 1
+fi
+
+# Fond d'écran courant, pour éviter de retirer deux fois de suite le même.
+current=""
+if [[ -L ${background_link} ]]; then
+  current="$(readlink -f "${background_link}")"
+fi
+
+candidates=()
+for wallpaper in "${wallpapers[@]}"; do
+  if [[ ${wallpaper} != "${current}" ]]; then
+    candidates+=("${wallpaper}")
+  fi
+done
+
+# S'il n'y a qu'une seule image (ou qu'elle est déjà affichée), on la garde.
+if (( ${#candidates[@]} == 0 )); then
+  candidates=("${wallpapers[@]}")
+fi
+
+count=${#candidates[@]}
+index=$(( RANDOM % count ))
+
+echo "Fond d'écran : ${candidates[${index}]}"
+omarchy theme bg set "${candidates[${index}]}"

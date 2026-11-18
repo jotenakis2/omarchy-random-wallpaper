@@ -1,5 +1,13 @@
+# French when the session language starts with "fr", English as fallback.
+case "${LANGUAGE:-${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}}" in
+  fr*) lang=fr ;;
+  *) lang=en ;;
+esac
+
 post_install() {
-  cat <<'EOF'
+  case "${lang}" in
+    fr)
+      cat <<'EOF'
 
 ==> omarchy-random-wallpaper installé
 
@@ -17,6 +25,28 @@ Le script lit ~/Pictures/wallpapers (png, jpg, jpeg, webp) et applique l'image
 tirée au hasard avec `omarchy theme bg set`.
 
 EOF
+      ;;
+    *)
+      cat <<'EOF'
+
+==> omarchy-random-wallpaper installed
+
+The timer enables itself on the first session start of *future* users. For the
+current session, enable it once by hand:
+
+    systemctl --user daemon-reload
+    systemctl --user enable --now random-wallpaper.timer
+
+Check the next run:
+
+    systemctl --user list-timers random-wallpaper.timer
+
+The script reads ~/Pictures/wallpapers (png, jpg, jpeg, webp) and applies a
+randomly picked image with `omarchy theme bg set`.
+
+EOF
+      ;;
+  esac
 }
 
 post_upgrade() {
@@ -24,7 +54,9 @@ post_upgrade() {
 }
 
 pre_remove() {
-  cat <<'EOF'
+  case "${lang}" in
+    fr)
+      cat <<'EOF'
 
 ==> Désactivation du timer pour l'utilisateur courant
 
@@ -33,4 +65,17 @@ Si vous retirez ce paquet, pensez à supprimer le timer de votre session :
     systemctl --user disable --now random-wallpaper.timer
 
 EOF
+      ;;
+    *)
+      cat <<'EOF'
+
+==> Disable the timer for the current user
+
+If you remove this package, remember to drop the timer from your session:
+
+    systemctl --user disable --now random-wallpaper.timer
+
+EOF
+      ;;
+  esac
 }

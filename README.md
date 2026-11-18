@@ -1,24 +1,28 @@
 # omarchy-random-wallpaper
 
-Change le fond d'écran Omarchy toutes les heures en piochant au hasard dans
+**English** · [Français](README.fr.md)
+
+Changes the Omarchy wallpaper every hour, picking at random from
 `~/Pictures/wallpapers`.
 
-Le changement passe par l'API officielle d'Omarchy (`omarchy theme bg set`) :
-l'état `~/.local/state/omarchy/current/background` est mis à jour et le shell
-est notifié, donc le fond survit aux changements de thème et aux redémarrages.
-L'image déjà affichée est exclue du tirage pour éviter les répétitions
-consécutives.
+The switch goes through Omarchy's official API (`omarchy theme bg set`): the
+`~/.local/state/omarchy/current/background` state is updated and the shell is
+notified, so the wallpaper survives theme changes and reboots. The image
+currently displayed is excluded from the draw to avoid consecutive repeats.
 
-## Prérequis
+Program messages follow the session locale: French when
+`LANGUAGE`/`LC_ALL`/`LC_MESSAGES`/`LANG` starts with `fr`, English otherwise.
 
-- Omarchy (commande `omarchy` disponible)
-- Un dossier `~/Pictures/wallpapers` contenant des `.png`, `.jpg`, `.jpeg`
-  ou `.webp`
-- `systemd --user` (session Hyprland/uwsm standard)
+## Requirements
 
-## Installation sans root (session courante)
+- Omarchy (`omarchy` command available)
+- A `~/Pictures/wallpapers` directory with `.png`, `.jpg`, `.jpeg` or `.webp`
+  files
+- `systemd --user` (standard Hyprland/uwsm session)
 
-C'est la méthode la plus simple, elle ne touche ni `/usr` ni pacman :
+## Install without root (current session)
+
+The simplest method: it touches neither `/usr` nor pacman.
 
 ```bash
 git clone https://github.com/jotenakis2/omarchy-random-wallpaper.git \
@@ -27,98 +31,97 @@ cd ~/Projects/omarchy-random-wallpaper
 ./install.sh
 ```
 
-Le script installe :
+The script installs:
 
-| Chemin | Contenu |
+| Path | Content |
 |---|---|
-| `~/.local/bin/random-wallpaper` | le script de tirage |
-| `~/.config/systemd/user/random-wallpaper.service` | unité `oneshot` |
-| `~/.config/systemd/user/random-wallpaper.timer` | timer horaire |
+| `~/.local/bin/random-wallpaper` | the draw script |
+| `~/.config/systemd/user/random-wallpaper.service` | `oneshot` unit |
+| `~/.config/systemd/user/random-wallpaper.timer` | hourly timer |
 
-puis il active le timer immédiatement (`systemctl --user enable --now`).
+then enables the timer immediately (`systemctl --user enable --now`).
 
-Désinstallation :
+Uninstall:
 
 ```bash
 ./install.sh --uninstall
 ```
 
-## Installation en paquet pacman
+## Install as a pacman package
 
 ```bash
 cd ~/Projects/omarchy-random-wallpaper
 makepkg -si
 ```
 
-Le paquet installe :
+The package installs:
 
-| Chemin | Contenu |
+| Path | Content |
 |---|---|
-| `/usr/bin/random-wallpaper` | le script de tirage |
-| `/usr/lib/systemd/user/random-wallpaper.{service,timer}` | unités utilisateur |
-| `/usr/lib/systemd/user-preset/90-omarchy-random-wallpaper.preset` | activation automatique |
-| `/usr/share/licenses/omarchy-random-wallpaper/LICENSE` | licence MIT |
+| `/usr/bin/random-wallpaper` | the draw script |
+| `/usr/lib/systemd/user/random-wallpaper.{service,timer}` | user units |
+| `/usr/lib/systemd/user-preset/90-omarchy-random-wallpaper.preset` | automatic enable |
+| `/usr/share/licenses/omarchy-random-wallpaper/LICENSE` | MIT license |
 
-Grâce au preset, le timer s'active **tout seul** au premier démarrage de
-session systemd de chaque nouvel utilisateur. Sur une session déjà ouverte
-(cas de l'installation sur une machine existante), il faut l'activer une fois :
+Thanks to the preset, the timer enables **itself** on the first systemd session
+start of every new user. On a session that is already running (installing on an
+existing machine), enable it once:
 
 ```bash
 systemctl --user daemon-reload
 systemctl --user enable --now random-wallpaper.timer
 ```
 
-C'est exactement ce que le message post-installation de pacman rappelle.
+That is exactly what the pacman post-install message reminds you of.
 
-## Vérifier et piloter
+## Inspect and control
 
 ```bash
-systemctl --user list-timers random-wallpaper.timer   # prochain tirage
-systemctl --user start random-wallpaper.service       # tirer tout de suite
-journalctl --user -u random-wallpaper.service -n 20   # images choisies
-systemctl --user disable --now random-wallpaper.timer # mettre en pause
+systemctl --user list-timers random-wallpaper.timer   # next run
+systemctl --user start random-wallpaper.service       # draw right now
+journalctl --user -u random-wallpaper.service -n 20   # picked images
+systemctl --user disable --now random-wallpaper.timer # pause
 ```
 
-## Personnaliser
+## Customize
 
-Changer de dossier (surcharge de l'unité, sans toucher au paquet) :
+Use another directory (unit override, the package stays untouched):
 
 ```bash
 systemctl --user edit random-wallpaper.service
 # [Service]
-# Environment=WALLPAPER_DIR=/chemin/vers/mes/fonds
+# Environment=WALLPAPER_DIR=/path/to/my/wallpapers
 ```
 
-Changer la fréquence :
+Change the frequency:
 
 ```bash
 systemctl --user edit random-wallpaper.timer
 # [Timer]
-# OnCalendar=*-*-* *:00/30:00     (toutes les 30 minutes)
+# OnCalendar=*-*-* *:00/30:00     (every 30 minutes)
 ```
 
-Puis `systemctl --user daemon-reload && systemctl --user restart random-wallpaper.timer`.
+Then `systemctl --user daemon-reload && systemctl --user restart random-wallpaper.timer`.
 
-## Dépannage
+## Troubleshooting
 
-- **Rien ne change** : vérifier `systemctl --user status random-wallpaper.service`
-  et `journalctl --user -u random-wallpaper.service`. Le service a besoin de
-  `WAYLAND_DISPLAY` dans l'environnement systemd --user (fourni par uwsm sur
-  Omarchy) ; le symlink d'état est de toute façon mis à jour même si le shell
-  est absent.
-- **Dossier vide ou nommé autrement** : le script sort en erreur avec le chemin
-  recherché ; utiliser `WALLPAPER_DIR` comme ci-dessus.
-- Le paquet et l'installation utilisateur sont exclusifs : `install.sh` refuse
-  de s'installer si `omarchy-random-wallpaper` est présent via pacman.
+- **Nothing changes**: check `systemctl --user status random-wallpaper.service`
+  and `journalctl --user -u random-wallpaper.service`. The service needs
+  `WAYLAND_DISPLAY` in the systemd --user environment (provided by uwsm on
+  Omarchy); the state symlink is updated anyway even when the shell is absent.
+- **Empty or differently named directory**: the script exits with an error
+  naming the path it looked for; set `WALLPAPER_DIR` as shown above.
+- The package and the user-level install are mutually exclusive: `install.sh`
+  refuses to run when `omarchy-random-wallpaper` is present via pacman.
 
-## Contenu du dépôt
+## Repository layout
 
 ```
-random-wallpaper                     script de tirage
-systemd/random-wallpaper.service     unité (ExecStart=/usr/bin/...)
-systemd/random-wallpaper.timer       timer horaire (OnCalendar=hourly)
-systemd/90-....preset                activation auto des nouveaux utilisateurs
-install.sh                           installation utilisateur sans root
-PKGBUILD + .install                  paquet Arch
+random-wallpaper                     draw script
+systemd/random-wallpaper.service     unit (ExecStart=/usr/bin/...)
+systemd/random-wallpaper.timer       hourly timer (OnCalendar=hourly)
+systemd/90-....preset                automatic enable for new users
+install.sh                           rootless user install
+PKGBUILD + .install                  Arch package
 check.sh                             shellcheck-real + systemd-analyze verify
 ```

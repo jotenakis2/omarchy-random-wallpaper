@@ -1,5 +1,5 @@
 [Unit]
-Description=Fond d'écran aléatoire depuis ~/Pictures/wallpapers
+Description=Random wallpaper from ~/Pictures/wallpapers
 After=graphical-session.target
 PartOf=graphical-session.target
 

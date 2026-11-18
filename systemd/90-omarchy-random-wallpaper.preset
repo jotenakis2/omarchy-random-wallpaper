@@ -1,3 +1,3 @@
-# Active le timer pour chaque nouvel utilisateur (appliqué par le gestionnaire
-# systemd --user au premier démarrage de la session).
+# Enable the timer for every new user (applied by the systemd --user manager
+# on the first start of the session).
 enable random-wallpaper.timer

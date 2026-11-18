@@ -1,8 +1,8 @@
 # Maintainer: Olivier Lorillu <contact@jotenakis.ovh>
 pkgname=omarchy-random-wallpaper
 pkgver=1.0.0
-pkgrel=1
-pkgdesc="Rotation horaire aléatoire du fond d'écran depuis ~/Pictures/wallpapers, pour Omarchy"
+pkgrel=2
+pkgdesc="Hourly random wallpaper rotation from ~/Pictures/wallpapers, for Omarchy"
 arch=('any')
 url="https://github.com/jotenakis2/omarchy-random-wallpaper"
 license=('MIT')
@@ -10,7 +10,7 @@ depends=('bash' 'systemd' 'omarchy')
 install="$pkgname.install"
 options=('!strip')
 
-# Les fichiers du paquet sont dans le dépôt lui-même : pas de source à télécharger.
+# Package files live in the repository itself: nothing to download.
 source=()
 sha256sums=()
 
@@ -22,8 +22,8 @@ package() {
   install -Dm644 "$startdir/systemd/random-wallpaper.timer" \
     "$pkgdir/usr/lib/systemd/user/random-wallpaper.timer"
 
-  # Preset : le timer s'active tout seul au premier démarrage de session
-  # du gestionnaire systemd --user (nouvel utilisateur, nouvelle machine).
+  # Preset: the timer enables itself on the first session start of each new
+  # user (systemd --user applies user presets on first start).
   install -Dm644 "$startdir/systemd/90-omarchy-random-wallpaper.preset" \
     "$pkgdir/usr/lib/systemd/user-preset/90-omarchy-random-wallpaper.preset"
 

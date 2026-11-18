@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # shellcheck enable=all
 
-# Vérifie tous les scripts du dépôt avec shellcheck-real (gate « zéro avertissement »).
+# Check every script in the repository with shellcheck-real (zero-warning gate)
+# and validate the systemd units.
 
 set -euo pipefail
 
@@ -13,8 +14,8 @@ for file in random-wallpaper install.sh check.sh omarchy-random-wallpaper.instal
   shellcheck-real --enable=all --shell=bash "${file}" || status=1
 done
 
-# L'unité du dépôt vise /usr/bin (installation par paquet). Pour la vérifier
-# sans le paquet, on la copie en pointant sur le script du dépôt.
+# The repository unit targets /usr/bin (package install). To validate it
+# without the package, verify a copy pointing at the repository script.
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
 

@@ -1,35 +1,58 @@
 #!/usr/bin/env bash
 # shellcheck enable=all
 
-# Change le fond d'écran pour une image tirée au hasard dans WALLPAPER_DIR
-# (par défaut ~/Pictures/wallpapers), via l'API Omarchy.
+# Picks a random image from WALLPAPER_DIR (default ~/Pictures/wallpapers) and
+# applies it through the Omarchy background API.
+#
+# User-facing messages are French when the session locale is French, English
+# otherwise.
 
 set -euo pipefail
 
 wallpaper_dir="${WALLPAPER_DIR:-${HOME}/Pictures/wallpapers}"
 background_link="${HOME}/.local/state/omarchy/current/background"
 
+# French when the session language starts with "fr", English as fallback.
+case "${LANGUAGE:-${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}}" in
+  fr*) lang=fr ;;
+  *) lang=en ;;
+esac
+
+say() {
+  case "${lang}:${1}" in
+    en:no_omarchy) printf '%s\n' 'omarchy not found in PATH: this script targets Omarchy.' ;;
+    fr:no_omarchy) printf '%s\n' 'omarchy introuvable dans le PATH : ce script est prévu pour Omarchy.' ;;
+    en:no_dir) printf 'Directory not found: %s\n' "${2}" ;;
+    fr:no_dir) printf 'Dossier introuvable : %s\n' "${2}" ;;
+    en:no_images) printf 'No image (.png, .jpg, .jpeg, .webp) in %s\n' "${2}" ;;
+    fr:no_images) printf 'Aucune image (.png, .jpg, .jpeg, .webp) dans %s\n' "${2}" ;;
+    en:applied) printf 'Wallpaper: %s\n' "${2}" ;;
+    fr:applied) printf "Fond d'écran : %s\n" "${2}" ;;
+    *) printf 'Unknown message: %s\n' "${1}" >&2 ;;
+  esac
+}
+
 if ! command -v omarchy >/dev/null 2>&1; then
-  echo "omarchy introuvable dans le PATH : ce script est prévu pour Omarchy." >&2
+  say no_omarchy >&2
   exit 1
 fi
 
 if [[ ! -d ${wallpaper_dir} ]]; then
-  echo "Dossier introuvable : ${wallpaper_dir}" >&2
+  say no_dir "${wallpaper_dir}" >&2
   exit 1
 fi
 
-# Extensions acceptées par le shell Omarchy.
+# Extensions supported by the Omarchy shell.
 shopt -s nullglob nocaseglob
 wallpapers=("${wallpaper_dir}"/*.{png,jpg,jpeg,webp})
 shopt -u nullglob nocaseglob
 
 if (( ${#wallpapers[@]} == 0 )); then
-  echo "Aucune image dans ${wallpaper_dir}" >&2
+  say no_images "${wallpaper_dir}" >&2
   exit 1
 fi
 
-# Fond d'écran courant, pour éviter de retirer deux fois de suite le même.
+# Current wallpaper, so the same image is not drawn twice in a row.
 current=""
 if [[ -L ${background_link} ]]; then
   current="$(readlink -f "${background_link}")"
@@ -42,7 +65,7 @@ for wallpaper in "${wallpapers[@]}"; do
   fi
 done
 
-# S'il n'y a qu'une seule image (ou qu'elle est déjà affichée), on la garde.
+# With a single image (or when it is already displayed), keep it.
 if (( ${#candidates[@]} == 0 )); then
   candidates=("${wallpapers[@]}")
 fi
@@ -50,5 +73,5 @@ fi
 count=${#candidates[@]}
 index=$(( RANDOM % count ))
 
-echo "Fond d'écran : ${candidates[${index}]}"
+say applied "${candidates[${index}]}"
 omarchy theme bg set "${candidates[${index}]}"

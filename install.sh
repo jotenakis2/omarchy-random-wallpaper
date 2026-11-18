@@ -70,14 +70,30 @@ install_files() {
   mkdir -p "${bin_dir}" "${unit_dir}"
 
   install -m 755 "${repo_dir}/random-wallpaper" "${bin_dir}/random-wallpaper"
-  install -m 644 "${repo_dir}/systemd/random-wallpaper.timer" \
-    "${unit_dir}/random-wallpaper.timer"
+
+  # systemd cannot translate Description=, so write it in the session language
+  # (the packaged units keep English, the common fallback).
+  case "${lang}" in
+    fr)
+      service_desc="Fond d'écran aléatoire depuis ~/Pictures/wallpapers"
+      timer_desc="Change de fond d'écran toutes les heures"
+      ;;
+    *)
+      service_desc="Random wallpaper from ~/Pictures/wallpapers"
+      timer_desc="Change wallpaper every hour"
+      ;;
+  esac
 
   # The repository unit targets /usr/bin (package install): rewrite it for the
   # user-level installation.
-  sed "s|^ExecStart=.*|ExecStart=${bin_dir}/random-wallpaper|" \
+  sed -e "s|^ExecStart=.*|ExecStart=${bin_dir}/random-wallpaper|" \
+    -e "s|^Description=.*|Description=${service_desc}|" \
     "${repo_dir}/systemd/random-wallpaper.service" >"${unit_dir}/random-wallpaper.service"
   chmod 644 "${unit_dir}/random-wallpaper.service"
+
+  sed "s|^Description=.*|Description=${timer_desc}|" \
+    "${repo_dir}/systemd/random-wallpaper.timer" >"${unit_dir}/random-wallpaper.timer"
+  chmod 644 "${unit_dir}/random-wallpaper.timer"
 
   systemctl --user daemon-reload
   systemctl --user enable --now "${timer}"

@@ -1,7 +1,7 @@
 # Maintainer: Olivier Lorillu <contact@jotenakis.ovh>
 pkgname=omarchy-random-wallpaper
 pkgver=1.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Hourly random wallpaper rotation from ~/Pictures/wallpapers, for Omarchy"
 arch=('any')
 url="https://github.com/jotenakis2/omarchy-random-wallpaper"

@@ -42,6 +42,10 @@ Le script installe :
 
 puis il active le timer immédiatement (`systemctl --user enable --now`).
 
+Les descriptions des unités sont écrites dans la langue de la session
+(systemd ne sait pas traduire `Description=`) : « Fond d'écran aléatoire depuis
+~/Pictures/wallpapers » en français, la version anglaise sinon.
+
 Désinstallation :
 
 ```bash
@@ -74,6 +78,15 @@ systemctl --user enable --now random-wallpaper.timer
 ```
 
 C'est exactement ce que le message post-installation de pacman rappelle.
+
+Les unités du paquet portent des descriptions en anglais : systemd ne sait pas
+les localiser, et un fichier de `/usr/lib/systemd/user` est commun à tous les
+comptes. Pour les franciser sur un compte donné :
+
+```bash
+systemctl --user edit --full random-wallpaper.timer   # Description=...
+systemctl --user edit --full random-wallpaper.service
+```
 
 ## Vérifier et piloter
 

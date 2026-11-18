@@ -21,7 +21,8 @@ consécutives.
 C'est la méthode la plus simple, elle ne touche ni `/usr` ni pacman :
 
 ```bash
-git clone <ce dépôt> ~/Projects/omarchy-random-wallpaper
+git clone https://github.com/jotenakis2/omarchy-random-wallpaper.git \
+  ~/Projects/omarchy-random-wallpaper
 cd ~/Projects/omarchy-random-wallpaper
 ./install.sh
 ```
